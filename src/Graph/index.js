@@ -9,6 +9,7 @@ import {
   forceManyBody
 } from "d3-force";
 import LOGO from "../logo.svg"
+import { data } from "./test";
 
 class Graph extends React.Component {
   constructor(props) {
@@ -41,16 +42,14 @@ class Graph extends React.Component {
 
   componentDidMount() {
     const { nodes, links } = this.state;
-    console.log(this.props.width);
-
     this.simulation = forceSimulation(nodes)
-      .force(
-        "link",
-        forceLink()
-          .id(d => d.id)
-          .links(links)
-          .distance(100)
-          .strength(0.9)
+    .force(
+      "link",
+      forceLink()
+      .id(d => d.id)
+      .links(links)
+      .distance(100)
+      .strength(0.9)
       )
       .force("x", forceX(200).strength(0.1))
       .force("charge", forceManyBody().strength(-1500))
@@ -58,25 +57,23 @@ class Graph extends React.Component {
         "y",
         forceY()
           .y(node => {
-            debugger
             return this.calcPath(node) * 150 - 75;
           })
           .strength(node => {
-
+            
             return 3;
           })
-      )
-      .force("collide", forceCollide(this.props.radius));
-
-    this.simulation.on("tick", () =>{
-      console.log(this.state.links,"this.state.links");
-      return(
-      this.setState({
-        links: this.state.links,
-        nodes: this.state.nodes
-      })
-      )
-    });
+          )
+          .force("collide", forceCollide(this.props.radius));
+          
+          this.simulation.on("tick", () =>{
+            return(
+              this.setState({
+                links: this.state.links,
+                nodes: this.state.nodes
+              })
+              )
+            });
     this.simulation.on("end", () => console.log("simulation end"));
   }
 
@@ -104,21 +101,17 @@ class Graph extends React.Component {
         terminations.push(node);
       }
     });
-debugger
     return Math.max(...terminations.map(node => this.calcPath(node)));
   }
 
   calcPath(node, length = 1) {
-    debugger
     const { nodes } = this.state;
 
     // end case
     if (!node.dependsOn) {
-      debugger
       return length;
     }
-debugger
-return 2;
+return node.id;
     // return Math.max(
     //   ...node.dependsOn.map(id =>
     //     this.calcPath(nodes.find(n => n.id === id), length + 1)
@@ -130,7 +123,6 @@ return 2;
     const { width, radius } = this.props;
     const { nodes, links, height } = this.state;
 console.log(links,'links');
-
     return (
       <svg className="container" height={height} width={width}>
         <defs>
@@ -154,13 +146,12 @@ console.log(links,'links');
           {nodes.map(n => (
             <g>
               <circle cx={n.x} cy={n.y} r={radius} fill="#FFF" stroke="#000" />
-              {/* <img src={LOGO} alt="Avatar"></img> */}
               <text textAnchor="middle" x={n.x} y={n.y}>
                 {n.name}
               </text>
             </g>
           ))}
-          {links.map((link, index) => (
+          {data.map((link, index) => (
             <line
               x1={link.source.x}
               y1={link.source.y + radius}
@@ -171,7 +162,6 @@ console.log(links,'links');
               markerEnd="url(#suit)"
               markerStart={link.twoSide ? "url(#suit)" : ""}
             />
-            // <path/>
           ))}
         </g>
       </svg>

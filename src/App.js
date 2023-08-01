@@ -1,6 +1,8 @@
 import React from "react";
 import Graph from "./Graph";
 import "./style.css";
+import ForceDirectedGraph from "./d3";
+import ForceDirectedGraphNew from "./d3-new";
 
 const styles = {
   fontFamily: "sans-serif",
@@ -25,6 +27,8 @@ const App = () => {
           // { id: 6, name: "node 6", dependsOn: [5], type:["cc"] } 
         ]}
       />
+      {/* <ForceDirectedGraph/> */}
+      {/* <ForceDirectedGraphNew/> */}
     </div>
   );
 };
