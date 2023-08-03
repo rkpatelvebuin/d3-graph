@@ -1,156 +1,108 @@
-import React, { useEffect, useRef } from 'react';
-import * as d3 from 'd3';
-import _ from 'underscore';
+import React, { useEffect, useRef } from "react";
+import * as d3 from "d3";
 
-const ForceDirectedGraph = () => {
-  const svgRef = useRef(null);
+const ForceDirectedGraph = ({ data, width, height }) => {
+  const canvasRef = useRef();
 
-  // DATA
-  const nodes = [{}, {}, {}, {}];
-
-  const links = [
-    // one link
-    {
-      source: 0,
-      target: 1,
-    },
-    // two links
-    {
-      source: 1,
-      target: 2,
-    },
-    {
-      source: 1,
-      target: 2,
-    },
-    // three links
-    {
-      source: 2,
-      target: 3,
-    },
-    {
-      source: 2,
-      target: 3,
-    },
-    {
-      source: 2,
-      target: 3,
-    },
-  ];
-
-  // DATA FORMATTING
-  _.each(links, function (link) {
-    // find other links with same target+source or source+target
-    const same = _.where(links, {
-      source: link.source,
-      target: link.target,
-    });
-    const sameAlt = _.where(links, {
-      source: link.target,
-      target: link.source,
-    });
-    const sameAll = same.concat(sameAlt);
-
-    _.each(sameAll, function (s, i) {
-      s.sameIndex = i + 1;
-      s.sameTotal = sameAll.length;
-      s.sameTotalHalf = s.sameTotal / 2;
-      s.sameUneven = s.sameTotal % 2 !== 0;
-      s.sameMiddleLink = s.sameUneven === true && Math.ceil(s.sameTotalHalf) === s.sameIndex;
-      s.sameLowerHalf = s.sameIndex <= s.sameTotalHalf;
-      s.sameArcDirection = s.sameLowerHalf ? 0 : 1;
-      s.sameIndexCorrected = s.sameLowerHalf ? s.sameIndex : s.sameIndex - Math.ceil(s.sameTotalHalf);
-    });
-  });
-
-  const maxSame = _.chain(links)
-    .sortBy(function (x) {
-      return x.sameTotal;
-    })
-    .last()
-    .value().sameTotal;
-
-  _.each(links, function (link) {
-    link.maxSameHalf = Math.floor(maxSame / 3);
-  });
-
-  // EFFECT HOOK
   useEffect(() => {
-    const width = 400;
-    const height = 400;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
 
-    const force = d3
+    const links = data.links.map((d) => {
+      return Object.create(d);
+    });
+    const nodes = data.nodes.map((d) => {
+      return Object.create(d);
+    });
+    console.log(data.links, "datalink");
+    console.log(data.nodes, "datanodes");
+    console.log(links, "links");
+    console.log(nodes, "nodes");
+    const simulation = d3
       .forceSimulation(nodes)
-      .force('link', d3.forceLink(links).distance(100))
-      .force('charge', d3.forceManyBody().strength(-200))
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .on('tick', tick);
+      .force("charge", d3.forceManyBody().strength(-30))
+      .force(
+        "link",
+        d3.forceLink(links).strength(1).distance(20).iterations(10)
+      )
+      .on("tick", ticked);
 
-    const svg = d3.select(svgRef.current).attr('width', width).attr('height', height);
+    function ticked() {
+      context.clearRect(0, 0, width, height);
+      context.save();
+      context.translate(width / 2, height / 2);
+      context.beginPath();
+      for (const d of links) {
+        const sx = d.source.x;
+        const sy = d.source.y;
+        const tx = d.target.x;
+        const ty = d.target.y;
 
-    // RENDER LINKS
-    const path = svg
-      .append('g')
-      .selectAll('path')
-      .data()
-      .enter()
-      .append('path')
-      .style('stroke', function (d) {
-        return d3.scaleOrdinal().range()[d.sameIndex - 1];
-      });
+        context.moveTo(sx, sy);
+        context.lineTo(tx, ty);
 
-    // RENDER NODES
-    const circle = svg
-      .append('g')
-      .selectAll('circle')
-      .data(force.nodes())
-      .enter()
-      .append('circle')
-      .attr('r', 8)
-      .call(d3.drag().on('start', dragstart).on('drag', dragged));
+        // Calculate arrowhead angle and length
+        console.log(ty, sy, tx, sx);
+        const angle = Math.atan2(ty - sy, tx - sx);
+        const arrowLength = 50;
 
-    // TICK FUNCTION
-    function tick() {
-      circle.attr('transform', function (d) {
-        return 'translate(' + d.x + ',' + d.y + ')';
-      });
-      path.attr('d', linkArc);
-    }
-
-    // DRAG FUNCTIONS
-    function dragstart(event, d) {
-      if (!event.active) force.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }
-
-    function dragged(event, d) {
-      d.fx = event.x;
-      d.fy = event.y;
-    }
-
-    // ARC CALCULATION
-    function linkArc(d) {
-      const dx = d.target.x - d.source.x;
-      const dy = d.target.y - d.source.y;
-      const dr = Math.sqrt(dx * dx + dy * dy);
-      const unevenCorrection = d.sameUneven ? 0 : 0.5;
-      const arc = (dr * d.maxSameHalf) / (d.sameIndexCorrected - unevenCorrection);
-
-      if (d.sameMiddleLink) {
-        arc = 0;
+        // Draw arrowhead
+        context.lineTo(
+          tx - arrowLength * Math.cos(angle - Math.PI / 6),
+          ty - arrowLength * Math.sin(angle - Math.PI / 6)
+        );
+        context.moveTo(tx, ty);
+        context.lineTo(
+          tx - arrowLength * Math.cos(angle + Math.PI / 6),
+          ty - arrowLength * Math.sin(angle + Math.PI / 6)
+        );
       }
-
-      return 'M' + d.source.x + ',' + d.source.y + 'A' + arc + ',' + arc + ' 0 0,' + d.sameArcDirection + ' ' + d.target.x + ',' + d.target.y;
+      context.strokeStyle = "#aaa";
+      context.stroke();
+      context.beginPath();
+      for (const d of nodes) {
+        context.moveTo(d.x + d.r, d.y);
+        context.arc(d.x, d.y, d.r, 0, 2 * Math.PI);
+      }
+      context.fillStyle = "white";
+      context.fill();
+      context.strokeStyle = "#000000";
+      context.stroke();
+      context.restore();
     }
 
-    // CLEANUP
-    return () => {
-      force.stop();
-    };
-  }, []);
+    const drag = d3
+      .drag()
+      .subject(({ x, y }) => simulation.find(x - width / 2, y - height / 2, 40))
+      .on("start", dragStarted)
+      .on("drag", dragged)
+      .on("end", dragEnded);
 
-  return <svg ref={svgRef}></svg>;
+    function dragStarted(event) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      event.subject.fx = event.subject.x;
+      event.subject.fy = event.subject.y;
+    }
+
+    function dragged(event) {
+      event.subject.fx = event.x;
+      event.subject.fy = event.y;
+    }
+
+    function dragEnded(event) {
+      if (!event.active) simulation.alphaTarget(0);
+      event.subject.fx = event.x;
+      event.subject.fy = event.y;
+      console.log(links, "linkschng");
+    }
+
+    d3.select(canvas).call(drag);
+    return () => {
+      simulation.stop();
+    };
+  }, [data, width, height]);
+
+  return <canvas ref={canvasRef} width={width} height={height} />;
 };
 
 export default ForceDirectedGraph;

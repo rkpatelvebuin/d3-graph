@@ -6,9 +6,9 @@ import {
   forceCollide,
   forceX,
   forceY,
-  forceManyBody
+  forceManyBody,
 } from "d3-force";
-import LOGO from "../logo.svg"
+import * as d3 from "d3";
 import { data } from "./test";
 
 class Graph extends React.Component {
@@ -17,24 +17,24 @@ class Graph extends React.Component {
 
     // calculate links
     const links = [];
-    props.nodes.forEach(n => {
+    props.nodes.forEach((n) => {
       if (!n.dependsOn) {
         return;
       }
 
       n.dependsOn.forEach((index, idx) => {
         links.push({ source: index, target: n.id, type: n.type[idx] });
-        if(n.dependsOn.length === idx + 1){
-          n.twoSide.forEach((index, idx)=>{
-            links.push({source: n.id, target: n.twoSide[idx], twoSide: true})
-          })
+        if (n.dependsOn.length === idx + 1) {
+          n.twoSide.forEach((index, idx) => {
+            links.push({ source: n.id, target: n.twoSide[idx], twoSide: true });
+          });
         }
       });
     });
 
     this.state = {
       nodes: props.nodes,
-      links: links
+      links: links,
     };
 
     this.state.height = this.getMaxPath() * 150 + 100;
@@ -43,37 +43,34 @@ class Graph extends React.Component {
   componentDidMount() {
     const { nodes, links } = this.state;
     this.simulation = forceSimulation(nodes)
-    .force(
-      "link",
-      forceLink()
-      .id(d => d.id)
-      .links(links)
-      .distance(100)
-      .strength(0.9)
+      .force(
+        "link",
+        forceLink()
+          .id((d) => d.id)
+          .links(links)
+          .distance(100)
+          .strength(0.9)
       )
       .force("x", forceX(200).strength(0.1))
       .force("charge", forceManyBody().strength(-1500))
       .force(
         "y",
         forceY()
-          .y(node => {
+          .y((node) => {
             return this.calcPath(node) * 150 - 75;
           })
-          .strength(node => {
-            
+          .strength((node) => {
             return 3;
           })
-          )
-          .force("collide", forceCollide(this.props.radius));
-          
-          this.simulation.on("tick", () =>{
-            return(
-              this.setState({
-                links: this.state.links,
-                nodes: this.state.nodes
-              })
-              )
-            });
+      )
+      .force("collide", forceCollide(this.props.radius));
+
+    this.simulation.on("tick", () => {
+      return this.setState({
+        links: this.state.links,
+        nodes: this.state.nodes,
+      });
+    });
     this.simulation.on("end", () => console.log("simulation end"));
   }
 
@@ -85,7 +82,7 @@ class Graph extends React.Component {
     const { nodes } = this.state;
     let dependedOn = false;
 
-    nodes.forEach(n => {
+    nodes.forEach((n) => {
       dependedOn = dependedOn || n.dependsOn.includes(node.id);
     });
 
@@ -96,12 +93,12 @@ class Graph extends React.Component {
     const { nodes } = this.state;
 
     const terminations = [];
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       if (!this.nodeDependedOn(node)) {
         terminations.push(node);
       }
     });
-    return Math.max(...terminations.map(node => this.calcPath(node)));
+    return Math.max(...terminations.map((node) => this.calcPath(node)));
   }
 
   calcPath(node, length = 1) {
@@ -111,18 +108,17 @@ class Graph extends React.Component {
     if (!node.dependsOn) {
       return length;
     }
-return node.id;
-    // return Math.max(
-    //   ...node.dependsOn.map(id =>
-    //     this.calcPath(nodes.find(n => n.id === id), length + 1)
-    //   )
-    // );
+    return node.id;
+  }
+
+  dragstart(d) {
+    d3.select(this).classed("fixed", (d.fixed = true));
   }
 
   render() {
     const { width, radius } = this.props;
     const { nodes, links, height } = this.state;
-console.log(links,'links');
+
     return (
       <svg className="container" height={height} width={width}>
         <defs>
@@ -143,7 +139,7 @@ console.log(links,'links');
           </marker>
         </defs>
         <g>
-          {nodes.map(n => (
+          {nodes.map((n) => (
             <g>
               <circle cx={n.x} cy={n.y} r={radius} fill="#FFF" stroke="#000" />
               <text textAnchor="middle" x={n.x} y={n.y}>
@@ -170,11 +166,11 @@ console.log(links,'links');
 }
 
 Graph.propTypes = {
-  radius: PropTypes.number
+  radius: PropTypes.number,
 };
 
 Graph.defaultProps = {
-  radius: 50
+  radius: 50,
 };
 
 export default Graph;
