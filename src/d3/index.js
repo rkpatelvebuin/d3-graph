@@ -14,16 +14,12 @@ const ForceDirectedGraph = ({ data, width, height }) => {
     const nodes = data.nodes.map((d) => {
       return Object.create(d);
     });
-    console.log(data.links, "datalink");
-    console.log(data.nodes, "datanodes");
-    console.log(links, "links");
-    console.log(nodes, "nodes");
     const simulation = d3
       .forceSimulation(nodes)
       .force("charge", d3.forceManyBody().strength(-30))
       .force(
         "link",
-        d3.forceLink(links).strength(1).distance(20).iterations(10)
+        d3.forceLink(links).strength(1).distance(350).iterations(5)
       )
       .on("tick", ticked);
 
@@ -37,35 +33,67 @@ const ForceDirectedGraph = ({ data, width, height }) => {
         const sy = d.source.y;
         const tx = d.target.x;
         const ty = d.target.y;
+        const sr = d.source.r; // Radius of the source node
+        const tr = d.target.r / 2; // Radius of the target node
+        const dx = tx - sx;
+        const dy = ty - sy;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Calculate the position of the arrowhead on the target node's perimeter
+        const arrowLength = tr + 5; // 5 is the distance from the node's perimeter to the arrowhead tip
+        const arrowX = tx - (dx / distance) * (tr + arrowLength);
+        const arrowY = ty - (dy / distance) * (tr + arrowLength);
 
         context.moveTo(sx, sy);
-        context.lineTo(tx, ty);
+        context.lineTo(arrowX, arrowY);
 
         // Calculate arrowhead angle and length
-        console.log(ty, sy, tx, sx);
-        const angle = Math.atan2(ty - sy, tx - sx);
-        const arrowLength = 50;
+        const angle = Math.atan2(ty - arrowY, tx - arrowX);
+        // const arrowLength = 50;
 
         // Draw arrowhead
         context.lineTo(
-          tx - arrowLength * Math.cos(angle - Math.PI / 6),
-          ty - arrowLength * Math.sin(angle - Math.PI / 6)
+          arrowX - arrowLength * Math.cos(angle - Math.PI / 6),
+          arrowY - arrowLength * Math.sin(angle - Math.PI / 6)
         );
-        context.moveTo(tx, ty);
+        context.moveTo(arrowX, arrowY);
         context.lineTo(
-          tx - arrowLength * Math.cos(angle + Math.PI / 6),
-          ty - arrowLength * Math.sin(angle + Math.PI / 6)
+          arrowX - arrowLength * Math.cos(angle + Math.PI / 6),
+          arrowY - arrowLength * Math.sin(angle + Math.PI / 6)
+        );
+
+        // Calculate the position of the icon on the link
+        const iconX = (sx + tx) / 2;
+        const iconY = (sy + ty) / 2;
+
+        const img = new Image();
+        img.src = d.icon; // Replace "your_icon_url_here" with the URL of the icon image
+        const iconSize = 20; // Adjust the size of the icon as needed
+        context.drawImage(
+          img,
+          iconX - iconSize / 2,
+          iconY - iconSize / 2,
+          iconSize,
+          iconSize
         );
       }
       context.strokeStyle = "#aaa";
       context.stroke();
       context.beginPath();
       for (const d of nodes) {
+        const img = new Image();
+        img.src = d.icon; // Assuming each node has an "icon" property that holds the icon image URL
+        const x = d.x - d.r;
+        const y = d.y - d.r;
+        const size = d.r * 2;
+        debugger;
+        context.drawImage(img, x, y, size, size);
+
         context.moveTo(d.x + d.r, d.y);
         context.arc(d.x, d.y, d.r, 0, 2 * Math.PI);
       }
-      context.fillStyle = "white";
-      context.fill();
+      // context.fillStyle = "white";
+      // context.fill();
       context.strokeStyle = "#000000";
       context.stroke();
       context.restore();
@@ -94,6 +122,7 @@ const ForceDirectedGraph = ({ data, width, height }) => {
       event.subject.fx = event.x;
       event.subject.fy = event.y;
       console.log(links, "linkschng");
+      console.log(nodes, "nodeschng");
     }
 
     d3.select(canvas).call(drag);

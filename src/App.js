@@ -1,6 +1,13 @@
 import React from "react";
 import Graph from "./Graph";
 import "./style.css";
+import app from "../src/app-logo.jpg";
+import javaScript from "../src/js-logo.png";
+import angular from "../src/angular-logo.png";
+import react from "../src/react-logo.png";
+import next from "../src/next-logo.png";
+import phone from "../src/phone-solid.svg";
+import radio from "../src/radio-solid.svg";
 import ForceDirectedGraph from "./d3";
 import ForceDirectedGraphNew from "./d3-new";
 
@@ -18,29 +25,35 @@ const App = () => {
     const nodes = [
       {
         index: 0,
-        r: 30,
+        r: 35,
+        icon: app,
       },
       {
         index: 1,
-        r: 30,
+        r: 35,
+        icon: javaScript,
       },
       {
         index: 2,
-        r: 30,
+        r: 35,
+        icon: angular,
       },
       {
         index: 3,
-        r: 30,
+        r: 35,
+        icon: react,
       },
       {
         index: 4,
-        r: 30,
+        r: 35,
+        icon: next,
       },
     ];
     const links = [
       {
         source: 0,
         target: 1,
+        icon: phone,
       },
       {
         source: 1,
@@ -49,14 +62,17 @@ const App = () => {
       {
         source: 1,
         target: 2,
+        icon: radio,
       },
       {
-        source: 2,
+        source: 1,
         target: 3,
+        icon: radio,
       },
       {
-        source: 2,
+        source: 3,
         target: 4,
+        icon: radio,
       },
     ];
     // for (let y = 0; y < n; ++y) {
