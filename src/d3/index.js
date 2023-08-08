@@ -8,9 +8,7 @@ const ForceDirectedGraph = ({ data, width, height }) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
-    const links = data.links.map((d) => {
-      return Object.create(d);
-    });
+    const links = data.links.map((d) => Object.create(d));
     const nodes = data.nodes.map((d) => {
       const nodeCopy = Object.create(d);
       nodeCopy.fx = d.x;
@@ -19,6 +17,7 @@ const ForceDirectedGraph = ({ data, width, height }) => {
         d.r + 5; /* calculate or set the radius based on your data */
       return nodeCopy;
     });
+
     const simulation = d3
       .forceSimulation(nodes)
       .force("charge", d3.forceManyBody().strength(-30))
@@ -127,9 +126,37 @@ const ForceDirectedGraph = ({ data, width, height }) => {
       event.subject.fy = event.y;
     }
 
+    canvas.addEventListener("mousemove", (event) => {
+      context.clearRect(0, 0, width, height);
+      ticked(); // Redraw the graph
+      const mouse = d3.pointer(event);
+      console.log(mouse, "mouse", event, width, height);
+      const hoveredNode = simulation.find(
+        mouse[0] - width / 2,
+        mouse[1] - height / 2,
+        40
+      );
+
+      if (hoveredNode) {
+        const angleStep = (2 * Math.PI) / 18;
+        for (let i = 0; i < 18; i++) {
+          const angle = i * angleStep;
+          const x =
+            hoveredNode.x + hoveredNode.radius * Math.cos(angle) + width / 2;
+          const y =
+            hoveredNode.y + hoveredNode.radius * Math.sin(angle) + height / 2;
+          context.beginPath();
+          context.arc(x, y, 2, 0, 2 * Math.PI);
+          context.fillStyle = "rgba(255, 0, 0, 0.5)";
+          context.fill();
+        }
+      }
+    });
+
     d3.select(canvas).call(drag);
     return () => {
       simulation.stop();
+      canvas.removeEventListener("mousemove", null);
     };
   }, [data, width, height]);
 
