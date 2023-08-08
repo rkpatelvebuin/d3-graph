@@ -1,0 +1,39 @@
+{
+    "d3Data":[
+        {
+            "r": 35,
+            "x": 3.474105281373113,
+            "y": -322.67023955207907,
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Desktop_computer_clipart_-_Yellow_theme.svg",
+            "target": [{"id":1, "icon": "fa-solid fa-phone"}]
+        },
+        {
+            "r": 35,
+            "x": 3.98930250217461,
+            "y": -158.74868789850302,
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png",
+            "target": [{"id":0},{"id":2, "icon":"fa-solid fa-radio"},{"id":3, "icon":"fa-solid fa-radio"}]
+        },
+        {
+            "r": 35,
+            "x": -138.80979040587215,
+            "y": 14.468417172968714,
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Angular_full_color_logo.svg",
+            "target": []
+        },
+        {
+            "r": 35,
+            "x": 103.97006992652467,
+            "y": 36.64253926810437,
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg",
+            "target": [{"id":4, "icon":"fa-solid fa-radio"}]
+        },
+        {
+            "r": 35,
+            "x": 325.79293974057543,
+            "y": 36.78072799528189,
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg",
+            "target": []
+        }
+    ]
+}

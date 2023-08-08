@@ -12,7 +12,12 @@ const ForceDirectedGraph = ({ data, width, height }) => {
       return Object.create(d);
     });
     const nodes = data.nodes.map((d) => {
-      return Object.create(d);
+      const nodeCopy = Object.create(d);
+      nodeCopy.fx = d.x;
+      nodeCopy.fy = d.y;
+      nodeCopy.radius =
+        d.r + 5; /* calculate or set the radius based on your data */
+      return nodeCopy;
     });
     const simulation = d3
       .forceSimulation(nodes)
@@ -21,6 +26,10 @@ const ForceDirectedGraph = ({ data, width, height }) => {
         "link",
         d3.forceLink(links).strength(1).distance(350).iterations(5)
       )
+      .force(
+        "collide",
+        d3.forceCollide().radius((d) => d.radius)
+      ) // Prevent overlapping
       .on("tick", ticked);
 
     function ticked() {
@@ -33,7 +42,6 @@ const ForceDirectedGraph = ({ data, width, height }) => {
         const sy = d.source.y;
         const tx = d.target.x;
         const ty = d.target.y;
-        const sr = d.source.r; // Radius of the source node
         const tr = d.target.r / 2; // Radius of the target node
         const dx = tx - sx;
         const dy = ty - sy;
@@ -49,7 +57,6 @@ const ForceDirectedGraph = ({ data, width, height }) => {
 
         // Calculate arrowhead angle and length
         const angle = Math.atan2(ty - arrowY, tx - arrowX);
-        // const arrowLength = 50;
 
         // Draw arrowhead
         context.lineTo(
@@ -86,14 +93,11 @@ const ForceDirectedGraph = ({ data, width, height }) => {
         const x = d.x - d.r;
         const y = d.y - d.r;
         const size = d.r * 2;
-        debugger;
         context.drawImage(img, x, y, size, size);
 
         context.moveTo(d.x + d.r, d.y);
         context.arc(d.x, d.y, d.r, 0, 2 * Math.PI);
       }
-      // context.fillStyle = "white";
-      // context.fill();
       context.strokeStyle = "#000000";
       context.stroke();
       context.restore();
@@ -121,8 +125,6 @@ const ForceDirectedGraph = ({ data, width, height }) => {
       if (!event.active) simulation.alphaTarget(0);
       event.subject.fx = event.x;
       event.subject.fy = event.y;
-      console.log(links, "linkschng");
-      console.log(nodes, "nodeschng");
     }
 
     d3.select(canvas).call(drag);

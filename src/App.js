@@ -1,87 +1,48 @@
-import React from "react";
-import Graph from "./Graph";
-import "./style.css";
-import app from "../src/app-logo.jpg";
-import javaScript from "../src/js-logo.png";
-import angular from "../src/angular-logo.png";
-import react from "../src/react-logo.png";
-import next from "../src/next-logo.png";
-import phone from "../src/phone-solid.svg";
-import radio from "../src/radio-solid.svg";
-import ForceDirectedGraph from "./d3";
-import ForceDirectedGraphNew from "./d3-new";
+import React, { useEffect } from "react";
+import data1 from "./d3/d3Data.json";
+// import Graph from "./Graph";
+// import ForceDirectedGraphNew from "./d3-new";
 
-const styles = {
-  fontFamily: "sans-serif",
-  textAlign: "center",
-  height: "100%",
-  width: "100%",
-};
+import "./style.css";
+import ForceDirectedGraph from "./d3";
+import { allData, d3Links, d3Nodes } from "./d3/d3-data";
+
+// const styles = {
+//   fontFamily: "sans-serif",
+//   textAlign: "center",
+//   height: "100%",
+//   width: "100%",
+// };
 
 const App = () => {
+  const getFormattedData = (data) => {
+    let newData = { nodes: [], links: [] };
+    data.d3Data.forEach((element, idx) => {
+      newData.nodes.push({
+        index: idx,
+        icon: element.icon,
+        r: element.r,
+        x: element.x,
+        y: element.y,
+      });
+      if (element.target.length) {
+        element.target.forEach((link) => {
+          newData.links.push({
+            source: idx,
+            target: link.id,
+            icon: link.icon,
+          });
+        });
+      }
+    });
+    return newData;
+  };
   const data = () => {
-    const n = 2;
-    // const nodes = Array.from({length: n * n}, (_, i) => ({index: i}));
-    const nodes = [
-      {
-        index: 0,
-        r: 35,
-        icon: app,
-      },
-      {
-        index: 1,
-        r: 35,
-        icon: javaScript,
-      },
-      {
-        index: 2,
-        r: 35,
-        icon: angular,
-      },
-      {
-        index: 3,
-        r: 35,
-        icon: react,
-      },
-      {
-        index: 4,
-        r: 35,
-        icon: next,
-      },
-    ];
-    const links = [
-      {
-        source: 0,
-        target: 1,
-        icon: phone,
-      },
-      {
-        source: 1,
-        target: 0,
-      },
-      {
-        source: 1,
-        target: 2,
-        icon: radio,
-      },
-      {
-        source: 1,
-        target: 3,
-        icon: radio,
-      },
-      {
-        source: 3,
-        target: 4,
-        icon: radio,
-      },
-    ];
-    // for (let y = 0; y < n; ++y) {
-    //   for (let x = 0; x < n; ++x) {
-    //     if (y > 0) links.push({ source: (y - 1) * n + x, target: y * n + x });
-    //     if (x > 0) links.push({ source: y * n + (x - 1), target: y * n + x });
-    //   }
-    // }
-    return { nodes, links };
+    return getFormattedData(allData);
+    // console.log(dddd, "dddd");
+    // const nodes = d3Nodes;
+    // const links = d3Links;
+    // return { nodes, links };
   };
 
   return (
