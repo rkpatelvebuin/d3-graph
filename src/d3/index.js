@@ -1,14 +1,29 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
 const ForceDirectedGraph = ({ data, width, height }) => {
   const canvasRef = useRef();
+  const [newLink, setNewLink] = useState({});
+  const [linkStart, setLinkStart] = useState({});
+  const [linkEnd, setLinkEnd] = useState({});
+  const [pointers, setPointers] = useState([]);
+  const [nodeIndex, setNodeIndex] = useState("");
+  console.log(newLink, "newLink123");
+
+  // const getNewLinkXY = ({ linkStart, linkEnd }) => {};
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-
-    const links = data.links.map((d) => Object.create(d));
+    let linksData = data.links;
+    if (Object.keys(newLink).length === 2) {
+      // const XY = getNewLinkXY({ linkStart, linkEnd });
+      linksData = [...linksData, newLink];
+    }
+    const links = linksData.map((d) => {
+      const linksCopy = Object.create(d);
+      return linksCopy;
+    });
     const nodes = data.nodes.map((d) => {
       const nodeCopy = Object.create(d);
       nodeCopy.fx = d.x;
@@ -17,7 +32,6 @@ const ForceDirectedGraph = ({ data, width, height }) => {
         d.r + 5; /* calculate or set the radius based on your data */
       return nodeCopy;
     });
-
     const simulation = d3
       .forceSimulation(nodes)
       .force("charge", d3.forceManyBody().strength(-30))
@@ -37,6 +51,55 @@ const ForceDirectedGraph = ({ data, width, height }) => {
       context.translate(width / 2, height / 2);
       context.beginPath();
       for (const d of links) {
+        // console.log(data.links, "ddd");
+        // const tr = d.target.r / 3; // Radius of the target node
+        // const sr = d.source.r; // Radius of the target node
+        // const sx =
+        //   // data.links[d.source.index].x +
+        //   data.links[d.index]?.sourceAxis.x +
+        //   sr *
+        //     Math.cos(
+        //       Math.atan2(
+        //         data.links[d.index]?.targetAxis.y -
+        //           data.links[d.index]?.sourceAxis.y,
+        //         data.links[d.index]?.targetAxis.x -
+        //           data.links[d.index]?.sourceAxis.x
+        //       )
+        //     );
+        // const sy =
+        //   data.links[d.index]?.sourceAxis.y +
+        //   sr *
+        //     Math.sin(
+        //       Math.atan2(
+        //         data.links[d.index]?.targetAxis.y -
+        //           data.links[d.index]?.sourceAxis.y,
+        //         data.links[d.index]?.targetAxis.x -
+        //           data.links[d.index]?.sourceAxis.x
+        //       )
+        //     );
+        // const tx =
+        //   data.links[d.index]?.targetAxis.x -
+        //   tr *
+        //     Math.cos(
+        //       Math.atan2(
+        //         data.links[d.index]?.targetAxis.y -
+        //           data.links[d.index]?.sourceAxis.y,
+        //         data.links[d.index]?.targetAxis.x -
+        //           data.links[d.index]?.sourceAxis.x
+        //       )
+        //     );
+        // const ty =
+        //   data.links[d.index]?.targetAxis.y -
+        //   tr *
+        //     Math.sin(
+        //       Math.atan2(
+        //         data.links[d.index]?.targetAxis.y -
+        //           data.links[d.index]?.sourceAxis.y,
+        //         data.links[d.index]?.targetAxis.x -
+        //           data.links[d.index]?.sourceAxis.x
+        //       )
+        //     );
+        // console.log(sx, sy, tx, ty, "poiuoupou");
         const sx = d.source.x;
         const sy = d.source.y;
         const tx = d.target.x;
@@ -118,6 +181,17 @@ const ForceDirectedGraph = ({ data, width, height }) => {
     function dragged(event) {
       event.subject.fx = event.x;
       event.subject.fy = event.y;
+      // Update link positions based on dragged node
+      for (const link of linksData) {
+        console.log(link, "777777");
+        if (link.source === event.subject.index) {
+          link.sourceAxis.x = event.x;
+          link.sourceAxis.y = event.y;
+        } else if (link.target === event.subject.index) {
+          link.targetAxis.x = event.x;
+          link.targetAxis.y = event.y;
+        }
+      }
     }
 
     function dragEnded(event) {
@@ -130,35 +204,110 @@ const ForceDirectedGraph = ({ data, width, height }) => {
       context.clearRect(0, 0, width, height);
       ticked(); // Redraw the graph
       const mouse = d3.pointer(event);
-      console.log(mouse, "mouse", event, width, height);
       const hoveredNode = simulation.find(
         mouse[0] - width / 2,
         mouse[1] - height / 2,
         40
       );
-
       if (hoveredNode) {
         const angleStep = (2 * Math.PI) / 18;
+        let pointers = [];
         for (let i = 0; i < 18; i++) {
           const angle = i * angleStep;
           const x =
             hoveredNode.x + hoveredNode.radius * Math.cos(angle) + width / 2;
           const y =
             hoveredNode.y + hoveredNode.radius * Math.sin(angle) + height / 2;
+          pointers = [...pointers, { x: x, y: y }];
           context.beginPath();
           context.arc(x, y, 2, 0, 2 * Math.PI);
           context.fillStyle = "rgba(255, 0, 0, 0.5)";
           context.fill();
         }
+        pointers.length && setPointers(pointers);
+        setNodeIndex(hoveredNode.index);
       }
     });
 
+    function canvasClicked(event) {
+      const mouse = d3.pointer(event);
+      let closestX = pointers[0].x;
+      let closestY = pointers[0].y;
+      let closestDiffX = Math.abs(mouse[0] - closestX);
+      let closestDiffY = Math.abs(mouse[1] - closestY);
+
+      pointers.forEach((i) => {
+        let currentX = i.x;
+        let currentY = i.y;
+        let currentDiffX = Math.abs(mouse[0] - currentX);
+        let currentDiffY = Math.abs(mouse[1] - currentY);
+        if (currentDiffX < closestDiffX) {
+          closestX = currentX;
+          // Update the closest number
+          closestDiffX = currentDiffX;
+          // Update the closest difference
+        }
+        if (currentDiffY < closestDiffY) {
+          closestY = currentY;
+          // Update the closest number
+          closestDiffY = currentDiffY;
+          // Update the closest difference
+        }
+      });
+      if (!Object.keys(linkStart).length) {
+        setLinkStart({ x: mouse[0], y: mouse[1] });
+        setNewLink({ source: nodeIndex });
+      } else {
+        setLinkEnd({ x: mouse[0], y: mouse[1] });
+        setNewLink({ ...newLink, target: nodeIndex });
+      }
+    }
+    canvas.addEventListener("click", canvasClicked);
+    canvas.addEventListener("mousedown", (event) => {
+      const mouse = d3.pointer(event);
+      // let closestX = pointers[0].x;
+      // let closestY = pointers[0].y;
+      // let closestDiffX = Math.abs(mouse[0] - closestX);
+      // let closestDiffY = Math.abs(mouse[1] - closestY);
+
+      // pointers.forEach((i) => {
+      //   let currentX = i.x;
+      //   let currentY = i.y;
+      //   let currentDiffX = Math.abs(mouse[0] - currentX);
+      //   let currentDiffY = Math.abs(mouse[1] - currentY);
+      //   if (currentDiffX < closestDiffX) {
+      //     closestX = currentX;
+
+      //     // Update the closest number
+      //     closestDiffX = currentDiffX;
+
+      //     // Update the closest difference
+      //   }
+      //   if (currentDiffY < closestDiffY) {
+      //     closestY = currentY;
+
+      //     // Update the closest number
+      //     closestDiffY = currentDiffY;
+
+      //     // Update the closest difference
+      //   }
+      // });
+      // if (!Object.keys(linkStart).length) {
+      //   setLinkStart({ x: mouse[0], y: mouse[1] });
+      //   setNewLink({ source: nodeIndex });
+      // } else {
+      //   setLinkEnd({ x: mouse[0], y: mouse[1] });
+      //   setNewLink({ ...newLink, target: nodeIndex });
+      // }
+    });
     d3.select(canvas).call(drag);
+
     return () => {
       simulation.stop();
       canvas.removeEventListener("mousemove", null);
+      canvas.removeEventListener("click", canvasClicked);
     };
-  }, [data, width, height]);
+  }, [data, width, height, linkStart, pointers, newLink]);
 
   return <canvas ref={canvasRef} width={width} height={height} />;
 };

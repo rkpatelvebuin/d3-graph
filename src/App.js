@@ -24,6 +24,8 @@ const App = () => {
             source: idx,
             target: link.id,
             icon: link.icon,
+            sourceAxis: link.source,
+            targetAxis: link.target,
           });
         });
       }
